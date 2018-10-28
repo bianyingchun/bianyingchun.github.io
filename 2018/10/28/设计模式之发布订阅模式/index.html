@@ -18,18 +18,18 @@
   
   
   <title>设计模式之发布订阅模式 | Hexo</title>
-  <meta name="description" content="1. 基本概念2. 现实例子3. 特点4. js事件机制中的发布订阅模式5. 自定义事件-实现发布订阅模式6. 全局的发布－订阅对象7. 总结">
+  <meta name="description" content="1. 基本概念发布—订阅模式又叫观察者模式，它定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都将得到通知。在 JavaScript 开发中，我们一般用事件模型 来替代传统的发布—订阅模式。 2. 现实例子3. 特点4. js事件机制中的发布订阅模式5. 自定义事件-实现发布订阅模式6. 全局的发布－订阅对象7. 总结">
 <meta name="keywords" content="javascript,设计模式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="设计模式之发布订阅模式">
 <meta property="og:url" content="http://yoursite.com/2018/10/28/设计模式之发布订阅模式/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="1. 基本概念2. 现实例子3. 特点4. js事件机制中的发布订阅模式5. 自定义事件-实现发布订阅模式6. 全局的发布－订阅对象7. 总结">
+<meta property="og:description" content="1. 基本概念发布—订阅模式又叫观察者模式，它定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都将得到通知。在 JavaScript 开发中，我们一般用事件模型 来替代传统的发布—订阅模式。 2. 现实例子3. 特点4. js事件机制中的发布订阅模式5. 自定义事件-实现发布订阅模式6. 全局的发布－订阅对象7. 总结">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2018-10-28T14:00:50.891Z">
+<meta property="og:updated_time" content="2018-10-28T14:05:06.028Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="设计模式之发布订阅模式">
-<meta name="twitter:description" content="1. 基本概念2. 现实例子3. 特点4. js事件机制中的发布订阅模式5. 自定义事件-实现发布订阅模式6. 全局的发布－订阅对象7. 总结">
+<meta name="twitter:description" content="1. 基本概念发布—订阅模式又叫观察者模式，它定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都将得到通知。在 JavaScript 开发中，我们一般用事件模型 来替代传统的发布—订阅模式。 2. 现实例子3. 特点4. js事件机制中的发布订阅模式5. 自定义事件-实现发布订阅模式6. 全局的发布－订阅对象7. 总结">
   <!-- Canonical links -->
   <link rel="canonical" href="http://yoursite.com/2018/10/28/设计模式之发布订阅模式/index.html">
   
@@ -325,7 +325,9 @@
     </div>
     <div class="article-entry marked-body" itemprop="articleBody">
       
-        <h4 id="1-基本概念"><a href="#1-基本概念" class="headerlink" title="1. 基本概念"></a>1. 基本概念</h4><h3 id="2-现实例子"><a href="#2-现实例子" class="headerlink" title="2. 现实例子"></a>2. 现实例子</h3><h2 id="3-特点"><a href="#3-特点" class="headerlink" title="3. 特点"></a>3. 特点</h2><h2 id="4-js事件机制中的发布订阅模式"><a href="#4-js事件机制中的发布订阅模式" class="headerlink" title="4. js事件机制中的发布订阅模式"></a>4. js事件机制中的发布订阅模式</h2><h2 id="5-自定义事件-实现发布订阅模式"><a href="#5-自定义事件-实现发布订阅模式" class="headerlink" title="5. 自定义事件-实现发布订阅模式"></a>5. 自定义事件-实现发布订阅模式</h2><h2 id="6-全局的发布－订阅对象"><a href="#6-全局的发布－订阅对象" class="headerlink" title="6. 全局的发布－订阅对象"></a>6. 全局的发布－订阅对象</h2><h2 id="7-总结"><a href="#7-总结" class="headerlink" title="7. 总结"></a>7. 总结</h2>
+        <h4 id="1-基本概念"><a href="#1-基本概念" class="headerlink" title="1. 基本概念"></a>1. 基本概念</h4><pre><code>发布—订阅模式又叫观察者模式，它定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都将得到通知。在 JavaScript 开发中，我们一般用事件模型
+</code></pre><p>来替代传统的发布—订阅模式。</p>
+<h4 id="2-现实例子"><a href="#2-现实例子" class="headerlink" title="2. 现实例子"></a>2. 现实例子</h4><h4 id="3-特点"><a href="#3-特点" class="headerlink" title="3. 特点"></a>3. 特点</h4><h4 id="4-js事件机制中的发布订阅模式"><a href="#4-js事件机制中的发布订阅模式" class="headerlink" title="4. js事件机制中的发布订阅模式"></a>4. js事件机制中的发布订阅模式</h4><h4 id="5-自定义事件-实现发布订阅模式"><a href="#5-自定义事件-实现发布订阅模式" class="headerlink" title="5. 自定义事件-实现发布订阅模式"></a>5. 自定义事件-实现发布订阅模式</h4><h4 id="6-全局的发布－订阅对象"><a href="#6-全局的发布－订阅对象" class="headerlink" title="6. 全局的发布－订阅对象"></a>6. 全局的发布－订阅对象</h4><h4 id="7-总结"><a href="#7-总结" class="headerlink" title="7. 总结"></a>7. 总结</h4>
       
     </div>
     <div class="article-footer">
