@@ -26,7 +26,7 @@
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="1. 前言  在浏览器拿到HTML, CSS JS 等外部资源到渲染出页面的过程，有一个重要的概念，例如为了保障首屏内容的最快速显示，通常会提到一个渐进式页面渲染，但是为了渐进式页面渲染，就需要做资源的拆分，那么以什么粒度拆分、要不要拆分，不同页面、不同场景策略不同。具体方案的确定既要考虑体验问题，也要考虑工程问题。了解原理可以让我们更好的优化关键渲染路径，从而获得更好的用户体验。 2. 阻塞资源">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-07-14T14:38:11.191Z">
+<meta property="og:updated_time" content="2019-07-14T14:57:01.778Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="浏览器关键渲染路径与阻塞渲染以及渲染优化">
 <meta name="twitter:description" content="1. 前言  在浏览器拿到HTML, CSS JS 等外部资源到渲染出页面的过程，有一个重要的概念，例如为了保障首屏内容的最快速显示，通常会提到一个渐进式页面渲染，但是为了渐进式页面渲染，就需要做资源的拆分，那么以什么粒度拆分、要不要拆分，不同页面、不同场景策略不同。具体方案的确定既要考虑体验问题，也要考虑工程问题。了解原理可以让我们更好的优化关键渲染路径，从而获得更好的用户体验。 2. 阻塞资源">
@@ -343,17 +343,28 @@
         <h3 id="1-前言"><a href="#1-前言" class="headerlink" title="1. 前言"></a>1. 前言</h3><p>  在浏览器拿到HTML, CSS JS 等外部资源到渲染出页面的过程，有一个重要的概念，例如为了保障首屏内容的最快速显示，通常会提到一个渐进式页面渲染，但是为了渐进式页面渲染，就需要做资源的拆分，那么以什么粒度拆分、要不要拆分，不同页面、不同场景策略不同。具体方案的确定既要考虑体验问题，也要考虑工程问题。了解原理可以让我们更好的优化关键渲染路径，从而获得更好的用户体验。</p>
 <h3 id="2-阻塞资源"><a href="#2-阻塞资源" class="headerlink" title="2. 阻塞资源"></a>2. 阻塞资源</h3><p>  现代浏览器总是并行加载资源，例如，当 HTML 解析器（HTML Parser）被脚本阻塞时，解析器虽然会停止构建 DOM，但仍会识别该脚本后面的资源，并进行预加载。<br>  同时由于：</p>
 <pre><code>1. CSS 被视为渲染阻塞资源(包括JS)，这意味着浏览器将不会渲染任何已处理的内容，直至 CSSOM 构建完毕，才会进行下一阶段。
-2. JavaScript 被认为是解释器阻塞资源，HTML解析会被JS阻塞，它不仅可以读取和修改 DOM 属性，还可以读取和修改 CSSOM 属性
-</code></pre><p>  存在阻塞的 CSS 资源时，浏览器会延迟 JavaScript 的执行和 DOM 构建。另外：<br>    1.当浏览器遇到一个 script 标记时，DOM 构建将暂停，直至脚本完成执行。<br>    2.JavaScript 可以查询和修改 DOM 与 CSSOM。<br>    3.CSSOM 构建时，JavaScript 执行将暂停，直至 CSSOM 就绪。</p>
-<p>  所以，script 标签的位置很重要。实际使用时，可以遵循下面两个原则：<br>    1.CSS 优先：引入顺序上，CSS 资源先于 JavaScript 资源。<br>    2.JavaScript 应尽量少影响 DOM 的构建。</p>
-<h3 id="3-CSS加载"><a href="#3-CSS加载" class="headerlink" title="3. CSS加载"></a>3. CSS加载</h3><ol>
+2. JavaScript 被认为是解释器阻塞资源，HTML解析会被JS阻塞，它不仅可以读取和修改 DOM 属性，还可以读取和修改 CSSOM 属性。
+</code></pre><p>  存在阻塞的 CSS 资源时，浏览器会延迟 JavaScript 的执行和 DOM 构建。另外：</p>
+<pre><code>1. 当浏览器遇到一个 script 标记时，DOM 构建将暂停，直至脚本完成执行。
+2. JavaScript 可以查询和修改 DOM 与 CSSOM。
+3. CSSOM 构建时，JavaScript 执行将暂停，直至 CSSOM 就绪。
+</code></pre><p>  所以，script 标签的位置很重要。实际使用时，可以遵循下面两个原则：</p>
+<pre><code>1. CSS 优先：引入顺序上，CSS 资源先于 JavaScript 资源。
+2. JavaScript 应尽量少影响 DOM 的构建。
+</code></pre><h3 id="3-CSS加载"><a href="#3-CSS加载" class="headerlink" title="3. CSS加载"></a>3. CSS加载</h3><ol>
 <li><p><code>&lt;style&gt; p { color: red; }&lt;/style&gt;
 &lt;link rel=&quot;stylesheet&quot; href=&quot;index.css&quot;&gt;</code><br>这样的 link 标签（无论是否 inline）会被视为阻塞渲染的资源，浏览器会优先处理这些 CSS 资源，直至 CSSOM 构建完毕。</p>
 </li>
-<li><p>渲染树（Render-Tree）的关键渲染路径中，要求同时具有 DOM 和 CSSOM，之后才会构建渲染树。即，HTML 和 CSS 都是阻塞渲染的资源。HTML 显然是必需的，因为包括我们希望显示的文本在内的内容，都在 DOM 中存放，那么可以从 CSS 上想办法。<br>最容易想到的当然是精简 CSS 并尽快提供它。除此之外，还可以用媒体类型（media type）和媒体查询（media query）来解除对渲染的阻塞。<br><code>&lt;link href=&quot;index.css&quot; rel=&quot;stylesheet&quot;&gt;
+<li><p>渲染树（Render-Tree）的关键渲染路径中，要求同时具有 DOM 和 CSSOM，之后才会构建渲染树。即，HTML 和 CSS 都是阻塞渲染的资源。HTML 显然是必需的，因为包括我们希望显示的文本在内的内容，都在 DOM 中存放，那么可以从 CSS 上想办法。</p>
+<p>最容易想到的当然是精简 CSS 并尽快提供它。除此之外，还可以用媒体类型（media type）和媒体查询（media query）来解除对渲染的阻塞。<br><code>&lt;link href=&quot;index.css&quot; rel=&quot;stylesheet&quot;&gt;
 &lt;link href=&quot;print.css&quot; rel=&quot;stylesheet&quot; media=&quot;print&quot;&gt;
 &lt;link href=&quot;other.css&quot; rel=&quot;stylesheet&quot; media=&quot;(min-width: 30em) and (orientation: landscape)&quot;&gt;</code><br>第一个资源会加载并阻塞。<br>第二个资源设置了媒体类型，会加载但不会阻塞，print 声明只在打印网页时使用。<br>第三个资源提供了媒体查询，会在符合条件时阻塞渲染。</p>
-<p>关于CSS加载的阻塞情况：<br>1.css加载不会阻塞DOM树的解析<br>2.css加载会阻塞DOM树的渲染<br>3.css加载会阻塞后面js语句的执行</p>
+<p>关于CSS加载的阻塞情况：</p>
+<ol>
+<li>css加载不会阻塞DOM树的解析</li>
+<li>css加载会阻塞DOM树的渲染</li>
+<li>css加载会阻塞后面js语句的执行</li>
+</ol>
 <p>没有js的理想情况下，html与css会并行解析，分别生成DOM与CSSOM，然后合并成Render Tree，进入Rendering Pipeline；但如果有js，css加载会阻塞后面js语句的执行，而（同步）js脚本执行会阻塞其后的DOM解析（所以通常会把css放在头部，js放在body尾）</p>
 </li>
 </ol>
@@ -375,13 +386,13 @@
 <p>  4.降低样式计算的范围和复杂度<br>    添加或移除一个DOM元素、修改元素属性和样式类、应用动画效果等操作，都会引起DOM结构的改变，从而导致浏览器要repaint或者reflow。那么这里可以采取一些措施。</p>
 <pre><code>1. 降低样式选择器的复杂度
 尽量保持class的简短，或者使用Web Components框架。
-.box:nth-last-child(-n+1) .title {}
+`.box:nth-last-child(-n+1) .title {}
 // 改善后
-.final-box-title {}
+.final-box-title {}`
 
 2. 减少需要执行样式计算的元素个数
 由于浏览器的优化，现代浏览器的样式计算直接对目标元素执行，而不是对整个页面执行，所以我们应该尽可能减少需要执行样式计算的元素的个数。
-</code></pre><p>  5.避免大规模、复杂的布局<br>    布局就是计算DOM元素的大小和位置的过程，如果你的页面中包含很多元素，那么计算这些元素的位置将耗费很长时间。布局的主要消耗在于：1. 需要布局的DOM元素的数量；2. 布局过程的复杂程度</p>
+</code></pre><p>  5.避免大规模、复杂的布局<br>    布局就是计算DOM元素的大小和位置的过程，如果你的页面中包含很多元素，那么计算这些元素的位置将耗费很长时间。布局的主要消耗在于:1. 需要布局的DOM元素的数量; 2.布局过程的复杂程度。</p>
 <pre><code>1. 尽可能避免触发布局
   当你修改了元素的属性之后，浏览器将会检查为了使这个修改生效是否需要重新计算布局以及更新渲染树，对于DOM元素的几何属性修改，比如width/height/left/top等，都需要重新计算布局。
 对于不能避免的布局，可以使用Chrome DevTools工具的Timeline查看布局的耗时，以及受影响的DOM元素数量。
@@ -390,89 +401,76 @@
   老的布局模型以相对/绝对/浮动的方式将元素定位到屏幕上，而Floxbox布局模型用流式布局的方式将元素定位到屏幕上。通过一个小实验可以看出
 
 3. 避免强制同步布局事件的发生
-根据渲染流程，JS脚本是在layout之前执行，但是我们可以强制浏览器在执行JS脚本之前先执行布局过程，这就是所谓的强制同步布局。
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">requestAnimationFrame(logBoxHeight);</span><br><span class="line"><span class="comment">// 先写后读，触发强制布局</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">logBoxHeight</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 更新box样式</span></span><br><span class="line">    box.classList.add(<span class="string">'super-big'</span>);</span><br><span class="line">    <span class="comment">// 为了返回box的offersetHeight值</span></span><br><span class="line">    <span class="comment">// 浏览器必须先应用属性修改，接着执行布局过程</span></span><br><span class="line">    <span class="built_in">console</span>.log(box.offsetHeight);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 先读后写，避免强制布局</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">logBoxHeight</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 获取box.offsetHeight</span></span><br><span class="line">    <span class="built_in">console</span>.log(box.offsetHeight);</span><br><span class="line">    <span class="comment">// 更新box样式</span></span><br><span class="line">    box.classList.add(<span class="string">'super-big'</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+  根据渲染流程，JS脚本是在layout之前执行，但是我们可以强制浏览器在执行JS脚本之前先执行布局过程，这就是所谓的强制同步布局。
+  <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">requestAnimationFrame(logBoxHeight);</span><br><span class="line"><span class="comment">// 先写后读，触发强制布局</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">logBoxHeight</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 更新box样式</span></span><br><span class="line">    box.classList.add(<span class="string">'super-big'</span>);</span><br><span class="line">    <span class="comment">// 为了返回box的offersetHeight值</span></span><br><span class="line">    <span class="comment">// 浏览器必须先应用属性修改，接着执行布局过程</span></span><br><span class="line">    <span class="built_in">console</span>.log(box.offsetHeight);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 先读后写，避免强制布局</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">logBoxHeight</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 获取box.offsetHeight</span></span><br><span class="line">    <span class="built_in">console</span>.log(box.offsetHeight);</span><br><span class="line">    <span class="comment">// 更新box样式</span></span><br><span class="line">    box.classList.add(<span class="string">'super-big'</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-在JS脚本运行的时候，它能获取到的元素样式属性值都是上一帧画面的，都是旧的值。因此，如果你在当前帧获取属性之前又对元素节点有改动，那就会导致浏览器必须先应用属性修改，结果执行布局过程，最后再执行JS逻辑。
+  在JS脚本运行的时候，它能获取到的元素样式属性值都是上一帧画面的，都是旧的值。因此，如果你在当前帧获取属性之前又对元素节点有改动，那就会导致浏览器必须先应用属性修改，结果执行布局过程，最后再执行JS逻辑。
 
 4. 避免连续的强制同步布局发生
-如果连续快速的多次触发强制同步布局，那么结果更糟糕。
-比如下面的例子，获取box的属性，设置到paragraphs上，由于每次设置paragraphs都会触发样式计算和布局过程，而下一次获取box的属性必须等到上一步设置结束之后才能触发。 
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">resizeWidth</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 会让浏览器陷入'读写读写'循环</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; paragraphs.length; i++) &#123;</span><br><span class="line">        paragraphs[i].style.width = box.offsetWidth + <span class="string">'px'</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 改善后方案</span></span><br><span class="line"><span class="keyword">var</span> width = box.offsetWidth;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">resizeWidth</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; paragraphs.length; i++) &#123;</span><br><span class="line">        paragraphs[i].style.width = width + <span class="string">'px'</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+  如果连续快速的多次触发强制同步布局，那么结果更糟糕。
+  比如下面的例子，获取box的属性，设置到paragraphs上，由于每次设置paragraphs都会触发样式计算和布局过程，而下一次获取box的属性必须等到上一步设置结束之后才能触发。 
+  <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">resizeWidth</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 会让浏览器陷入'读写读写'循环</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; paragraphs.length; i++) &#123;</span><br><span class="line">        paragraphs[i].style.width = box.offsetWidth + <span class="string">'px'</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 改善后方案</span></span><br><span class="line"><span class="keyword">var</span> width = box.offsetWidth;</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">resizeWidth</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; paragraphs.length; i++) &#123;</span><br><span class="line">        paragraphs[i].style.width = width + <span class="string">'px'</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-5.简化绘制的复杂度、减少绘制区域
+5. 简化绘制的复杂度、减少绘制区域
   Paint就是填充像素的过程，通常这个过程是整个渲染流程中耗时最长的一环，因此也是最需要避免发生的一环。
   如果Layout被触发，那么接下来元素的Paint一定会被触发。当然纯粹改变元素的非几何属性，也可能会触发Paint，比如背景、文字颜色、阴影效果等。
+
   1. 提升移动或渐变元素的绘制层
-  绘制并非总是在内存中的单层画面里完成的，实际上，浏览器在必要时会将一帧画面绘制成多层画面，然后将这若干层画面合并成一张图片显示到屏幕上。
+    绘制并非总是在内存中的单层画面里完成的，实际上，浏览器在必要时会将一帧画面绘制成多层画面，然后将这若干层画面合并成一张图片显示到屏幕上。
   这种绘制方式的好处是，使用transform来实现移动效果的元素将会被正常绘制，同时不会触发其他元素的绘制。
 
   2. 减少绘制区域，简化绘制的复杂度
-  浏览器会把相邻区域的渲染任务合并在一起进行，所以需要对动画效果进行精密设计，以保证各自的绘制区域不会有太多重叠。
+    浏览器会把相邻区域的渲染任务合并在一起进行，所以需要对动画效果进行精密设计，以保证各自的绘制区域不会有太多重叠。
   另外可以实现同样效果的不同方式，应该采用性能更好的那种。
 
   3. 通过Chrome DevTools来分析绘制复杂度和时间消耗，尽可能降低这些指标
-  打开DevTools，在弹出的面板中，选中More Tools &gt; Rendering选项卡下的Paint flashing，这样每当页面发生绘制的时候，屏幕就会闪现绿色的方框。通过该工具可以检查Paint发生的区域和时机是不是可以被优化。
+    打开DevTools，在弹出的面板中，选中More Tools &gt; Rendering选项卡下的Paint flashing，这样每当页面发生绘制的时候，屏幕就会闪现绿色的方框。通过该工具可以检查Paint发生的区域和时机是不是可以被优化。
   通过Chrome DevTools中的Timeline &gt; Paint选项可以查看更细节的Paint信息
 
 6.优先使用渲染层合并属性、控制层数量
   1. 使用transform/opacity实现动画效果
-  使用transform/opacity实现动画效果，会跳过渲染流程的布局和绘制环节，只做渲染层的合并。
-  Type  Func
-  Position  transform: translate(-px,-px)
-  Scale transform: scale(-)
-  Rotation  transform: rotate(-deg)
-  Skew  transform: skew(X/Y)(-deg)
-  Matrix  transform: matrix(3d)(..)
-  Opacity opacity: 0-1
-  使用transform/opacity的元素必须独占一个渲染层，所以必须提升该元素到单独的渲染层。
+    使用transform/opacity实现动画效果，会跳过渲染流程的布局和绘制环节，只做渲染层的合并。
+    Type  Func
+    Position  transform: translate(-px,-px)
+    Scale transform: scale(-)
+    Rotation  transform: rotate(-deg)
+    Skew  transform: skew(X/Y)(-deg)
+    Matrix  transform: matrix(3d)(..)
+    Opacity opacity: 0-1
+    使用transform/opacity的元素必须独占一个渲染层，所以必须提升该元素到单独的渲染层。
 
   2. 提升动画效果中的元素
-  应用动画效果的元素应该被提升到其自有的渲染层，但不要滥用。
-  在页面中创建一个新的渲染层最好的方式就是使用CSS属性will-change，对于目前还不支持will-change属性、但支持创建渲染层的浏览器，可以通过3D transform属性来强制浏览器创建一个新的渲染层。需要注意的是，不要创建过多的渲染层，这意味着新的内存分配和更复杂的层管理。
-  注意，IE11，Edge17都不支持这一属性。
-  `.moving-element {
+    应用动画效果的元素应该被提升到其自有的渲染层，但不要滥用。
+    在页面中创建一个新的渲染层最好的方式就是使用CSS属性will-change，对于目前还不支持will-change属性、但支持创建渲染层的浏览器，可以通过3D transform属性来强制浏览器创建一个新的渲染层。需要注意的是，不要创建过多的渲染层，这意味着新的内存分配和更复杂的层管理。
+    注意，IE11，Edge17都不支持这一属性。
+    `.moving-element {
+        will-change: transform;
+        transform: translateZ(0);
+    }`
+
+  3. 管理渲染层、避免过多数量的层
+    尽管提升渲染层看起来很诱人，但不能滥用，因为更多的渲染层意味着更多的额外的内存和管理资源，所以当且仅当需要的时候才为元素创建渲染层。
+    `* {
       will-change: transform;
       transform: translateZ(0);
-  }`
-  3. 管理渲染层、避免过多数量的层
-  尽管提升渲染层看起来很诱人，但不能滥用，因为更多的渲染层意味着更多的额外的内存和管理资源，所以当且仅当需要的时候才为元素创建渲染层。
-  `* {
-    will-change: transform;
-    transform: translateZ(0);
-  }`
+    }`
+
   4. 使用Chrome DevTools来了解页面的渲染层情况
-  开启Timeline &gt; Paint选项，然后录制一段时间的操作，选择单独的帧，看到每个帧的渲染细节，在ESC弹出框有个Layers选项，可以看到渲染层的细节，有多少渲染层，为何被创建？
+    开启Timeline &gt; Paint选项，然后录制一段时间的操作，选择单独的帧，看到每个帧的渲染细节，在ESC弹出框有个Layers选项，可以看到渲染层的细节，有多少渲染层，为何被创建？
 
 8. 对用户输入事件的处理函数去抖动（移动设备）
-用户输入事件处理函数会在运行时阻塞帧的渲染，并且会导致额外的布局发生。
+  用户输入事件处理函数会在运行时阻塞帧的渲染，并且会导致额外的布局发生。
   1. 避免使用运行时间过长的输入事件处理函数
-  理想情况下，当用户和页面交互，页面的渲染层合并线程将接收到这个事件并移动元素。这个响应过程是不需要主线程参与，不会导致JavaScript、布局和绘制过程发生。
-  但是如果被触摸的元素绑定了输入事件处理函数，比如touchstart/touchmove/touchend，那么渲染层合并线程必须等待这些被绑定的处理函数执行完毕才能执行，也就是用户的滚动页面操作被阻塞了，表现出的行为就是滚动出现延迟或者卡顿。
-
-  简而言之就是你必须确保用户输入事件绑定的任何处理函数都能够快速的执行完毕，以便腾出时间来让渲染层合并线程完成他的工作。
+    理想情况下，当用户和页面交互，页面的渲染层合并线程将接收到这个事件并移动元素。这个响应过程是不需要主线程参与，不会导致JavaScript、布局和绘制过程发生。
+    但是如果被触摸的元素绑定了输入事件处理函数，比如touchstart/touchmove/touchend，那么渲染层合并线程必须等待这些被绑定的处理函数执行完毕才能执行，也就是用户的滚动页面操作被阻塞了，表现出的行为就是滚动出现延迟或者卡顿。
+    简而言之就是你必须确保用户输入事件绑定的任何处理函数都能够快速的执行完毕，以便腾出时间来让渲染层合并线程完成他的工作。
 
   2. 避免在输入事件处理函数中修改样式属性
-  输入事件处理函数，比如scroll/touch事件的处理，都会在requestAnimationFrame之前被调用执行。
-  因此，如果你在上述输入事件的处理函数中做了修改样式属性的操作，那么这些操作就会被浏览器暂存起来，然后在调用requestAnimationFrame的时候，如果你在一开始就做了读取样式属性的操作，那么将会触发浏览器的强制同步布局操作。
+    输入事件处理函数，比如scroll/touch事件的处理，都会在requestAnimationFrame之前被调用执行。因此，如果你在上述输入事件的处理函数中做了修改样式属性的操作，那么这些操作就会被浏览器暂存起来，然后在调用requestAnimationFrame的时候，如果你在一开始就做了读取样式属性的操作，那么将会触发浏览器的强制同步布局操作。
 
   3. 对滚动事件处理函数去抖动
-  通过requestAnimationFrame可以对样式修改操作去抖动，同时也可以使你的事件处理函数变得更轻
-  ```javascript
-  function onScroll(evt) {
-      // Store the scroll value for laterz.
-      lastScrollY = window.scrollY;
-      // Prevent multiple rAF callbacks.
-      if (scheduledAnimationFrame) {
-          return;
-      }
-
-      scheduledAnimationFrame = true;
-      requestAnimationFrame(readAndUpdatePage);
-  }
-
-  window.addEventListener(&apos;scroll&apos;, onScroll); 
-  ```javascript 
+    通过requestAnimationFrame可以对样式修改操作去抖动，同时也可以使你的事件处理函数变得更轻
+    <figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">onScroll</span>(<span class="params">evt</span>) </span>&#123;</span><br><span class="line">    <span class="comment">// Store the scroll value for laterz.</span></span><br><span class="line">    lastScrollY = <span class="built_in">window</span>.scrollY;</span><br><span class="line">    <span class="comment">// Prevent multiple rAF callbacks.</span></span><br><span class="line">    <span class="keyword">if</span> (scheduledAnimationFrame) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    scheduledAnimationFrame = <span class="literal">true</span>;</span><br><span class="line">    requestAnimationFrame(readAndUpdatePage);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">window</span>.addEventListener(<span class="string">'scroll'</span>, onScroll);</span><br></pre></td></tr></table></figure>
 </code></pre>
       
     </div>
